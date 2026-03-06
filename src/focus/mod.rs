@@ -6,16 +6,24 @@ pub trait FocusProvider {
     fn active_window_class(&mut self) -> Option<String>;
 }
 
+struct NoopProvider;
+
+impl FocusProvider for NoopProvider {
+    fn active_window_class(&mut self) -> Option<String> {
+        None
+    }
+}
+
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 
-pub struct FocusTracker {
+pub struct Tracker {
     targets: Vec<String>,
     active: bool,
     last_check: Instant,
     provider: Box<dyn FocusProvider>,
 }
 
-impl FocusTracker {
+impl Tracker {
     pub fn new(targets: &[String], provider: Box<dyn FocusProvider>) -> Self {
         Self {
             targets: targets.iter().map(|s| s.to_lowercase()).collect(),
@@ -33,6 +41,7 @@ impl FocusTracker {
         if self.last_check.elapsed() < POLL_INTERVAL {
             return self.active;
         }
+
         self.last_check = Instant::now();
 
         let prev = self.active;
@@ -47,23 +56,20 @@ impl FocusTracker {
             .unwrap_or(false);
 
         if self.active != prev {
-            if self.active {
-                eprintln!("focus: matched target window");
-            } else {
-                eprintln!("focus: lost target window");
-            }
+            eprintln!("focus: {}", if self.active { "matched" } else { "lost" });
         }
 
         self.active
     }
 }
 
-pub fn resolve_socket() -> Option<String> {
-    hyprland::resolve_socket()
+pub fn socket() -> Option<String> {
+    hyprland::socket()
 }
 
 pub fn provider(socket_path: Option<String>) -> Box<dyn FocusProvider> {
-    Box::new(hyprland::HyprlandFocus::new(
-        socket_path.unwrap_or_default(),
-    ))
+    match socket_path {
+        Some(p) => Box::new(hyprland::Hyprland::new(p)),
+        None => Box::new(NoopProvider),
+    }
 }

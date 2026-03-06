@@ -1,4 +1,4 @@
-use crate::input::Mapping;
+use crate::input::Event;
 use anyhow::{Context, Result};
 use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
 use evdev::{AttributeSet, Device, Key, RelativeAxisType};
@@ -6,14 +6,13 @@ use evdev::{AttributeSet, Device, Key, RelativeAxisType};
 // Software-created devices that should never be grabbed (feedback loops).
 const SKIP_NAMES: &[&str] = &["virtual", "ydotool", "synergy", "barrier", "evdev-remap"];
 
-/// Priority rank for device selection. Lower = better match.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+// The lower ranking the higher prio
 enum Rank {
     Exact = 0,
     Fuzzy = 1,
 }
 
-/// How to locate a device: by path, name substring, or auto-detect.
 enum DeviceFilter<'a> {
     Path(&'a str),
     Name(&'a str),
@@ -30,7 +29,6 @@ impl<'a> DeviceFilter<'a> {
     }
 }
 
-/// Find a device by path, name, or auto-detect.
 pub fn find_mouse(filter: Option<&str>) -> Option<Device> {
     match DeviceFilter::parse(filter) {
         DeviceFilter::Path(p) => {
@@ -45,7 +43,6 @@ pub fn find_mouse(filter: Option<&str>) -> Option<Device> {
     }
 }
 
-/// Prefers exact match over substring.
 fn by_name(filter: &str) -> Option<Device> {
     let filter = filter.to_lowercase();
 
@@ -69,7 +66,6 @@ fn by_name(filter: &str) -> Option<Device> {
         })
 }
 
-/// Pick the best mouse. Prefers devices with "mouse" or "receiver" in the name.
 fn auto_detect() -> Option<Device> {
     evdev::enumerate()
         .filter(|(_, dev)| {
@@ -134,37 +130,32 @@ const MOUSE_AXES: &[RelativeAxisType] = &[
     RelativeAxisType::REL_WHEEL,
 ];
 
-/// A mouse has relative X/Y axes and a scroll wheel.
 fn is_mouse(dev: &Device) -> bool {
     dev.supported_relative_axes()
         .is_some_and(|axes| MOUSE_AXES.iter().all(|a| axes.contains(*a)))
 }
 
-/// Create a virtual device mirroring the source's capabilities,
-/// plus any extra keys needed by remap outputs.
-pub fn mirror(source: &Device, mappings: &[Mapping]) -> Result<VirtualDevice> {
+// we're using a virtual device to mirror the source's capabilities including
+// any extta keys needed by remap outputs
+pub fn mirror(source: &Device, extra_keys: &[&Event]) -> Result<VirtualDevice> {
     let mut keys = AttributeSet::<Key>::new();
     let mut axes = AttributeSet::<RelativeAxisType>::new();
 
-    source
-        .supported_keys()
-        .into_iter()
-        .flat_map(|s| s.iter())
-        .for_each(|k| {
+    if let Some(supported) = source.supported_keys() {
+        for k in supported.iter() {
             keys.insert(k);
-        });
+        }
+    }
 
-    mappings.iter().for_each(|m| {
-        keys.insert(m.output.to_evdev());
-    });
+    for ev in extra_keys {
+        keys.insert(ev.to_evdev());
+    }
 
-    source
-        .supported_relative_axes()
-        .into_iter()
-        .flat_map(|s| s.iter())
-        .for_each(|a| {
+    if let Some(supported) = source.supported_relative_axes() {
+        for a in supported.iter() {
             axes.insert(a);
-        });
+        }
+    }
 
     VirtualDeviceBuilder::new()
         .context("failed to create uinput builder")?

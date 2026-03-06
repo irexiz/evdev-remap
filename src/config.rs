@@ -1,13 +1,11 @@
 use crate::input::{Binding, Event, Mapping, Modifier};
 use serde::Deserialize;
 
-/// Top-level config. One or more rules, each targeting a device/window.
 #[derive(Deserialize)]
 pub struct Config {
     pub rule: Vec<RuleConfig>,
 }
 
-/// A single remapping rule: target window, device, and remap entries.
 #[derive(Deserialize)]
 pub struct RuleConfig {
     #[serde(default)]
@@ -16,7 +14,6 @@ pub struct RuleConfig {
     pub remap: Vec<RemapConfig>,
 }
 
-/// A single remap entry: modifier + input event -> output event.
 #[derive(Deserialize)]
 pub struct RemapConfig {
     #[serde(default)]
@@ -29,7 +26,16 @@ impl RuleConfig {
     pub fn mappings(&self) -> Vec<Mapping> {
         self.remap
             .iter()
-            .filter(|r| r.output.is_button())
+            .filter(|r| {
+                if !r.output.is_button() {
+                    eprintln!(
+                        "warning: scroll->scroll remap ignored ({:?} -> {:?})",
+                        r.input, r.output
+                    );
+                    return false;
+                }
+                true
+            })
             .map(|r| Mapping {
                 binding: Binding {
                     modifier: r.modifier,
@@ -66,8 +72,9 @@ mod tests {
 
         let mappings = config.rule[0].mappings();
         assert_eq!(mappings.len(), 2);
-        assert_eq!(mappings[0].binding.modifier, Modifier::Ctrl);
+
         assert_eq!(mappings[0].binding.input, Event::ScrollUp);
+        assert_eq!(mappings[0].binding.modifier, Modifier::Ctrl);
         assert_eq!(mappings[0].output, Event::MouseLeft);
         assert_eq!(mappings[1].binding.modifier, Modifier::None);
         assert_eq!(mappings[1].output, Event::MouseRight);

@@ -26,12 +26,7 @@ fn run() -> Result<()> {
         bail!("no rules defined");
     }
 
-    let socket = focus::resolve_socket();
-
-    if config.rule.len() == 1 {
-        let rule = config.rule.into_iter().next().expect("checked non-empty");
-        return remap::run(&rule, socket);
-    }
+    let socket = focus::socket();
 
     let handles: Vec<_> = config
         .rule

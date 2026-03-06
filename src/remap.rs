@@ -1,9 +1,10 @@
 use crate::config::RuleConfig;
 use crate::device;
-use crate::focus::{self, FocusTracker};
-use crate::input::{Binding, Event, Mapping, Modifier, ScrollAxis};
+use crate::focus::{self, Tracker};
+use crate::input::{Binding, Event, Modifier, ScrollAxis};
 use anyhow::{Context, Result, bail};
 use evdev::{Device, EventType, InputEvent, Key};
+use std::collections::HashMap;
 
 const PRESS: i32 = 1;
 const RELEASE: i32 = 0;
@@ -11,7 +12,6 @@ const RELEASE: i32 = 0;
 const SYN_REPORT_CODE: u16 = 0;
 const SYN_REPORT_VAL: i32 = 0;
 
-/// What to do with an event after attempting a remap.
 enum Action {
     Passthrough,
     Consumed,
@@ -23,7 +23,6 @@ const MODIFIER_KEYS: &[(Key, Key, Modifier)] = &[
     (Key::KEY_LEFTSHIFT, Key::KEY_RIGHTSHIFT, Modifier::Shift),
 ];
 
-/// Query the keyboard for the currently held modifier. Ctrl > Alt > Shift priority.
 fn read_modifier(keyboard: Option<&Device>) -> Modifier {
     let keys = keyboard
         .and_then(|kb| kb.get_key_state().ok())
@@ -36,11 +35,8 @@ fn read_modifier(keyboard: Option<&Device>) -> Modifier {
         .unwrap_or(Modifier::None)
 }
 
-fn lookup<'a>(mappings: &'a [Mapping], binding: &Binding) -> Option<&'a Mapping> {
-    mappings.iter().find(|m| m.binding == *binding)
-}
+type Mappings = HashMap<Binding, Event>;
 
-/// Emit a button press + release with SYN_REPORT after each.
 fn emit(virt: &mut evdev::uinput::VirtualDevice, key: Key) -> Result<()> {
     let press = InputEvent::new(EventType::KEY, key.code(), PRESS);
     let release = InputEvent::new(EventType::KEY, key.code(), RELEASE);
@@ -52,10 +48,9 @@ fn emit(virt: &mut evdev::uinput::VirtualDevice, key: Key) -> Result<()> {
     Ok(())
 }
 
-/// Try to remap a scroll event. Returns Consumed if matched (or hi-res swallowed).
 fn try_remap(
     ev: &InputEvent,
-    mappings: &[Mapping],
+    mappings: &Mappings,
     keyboard: Option<&Device>,
     virt: &mut evdev::uinput::VirtualDevice,
 ) -> Result<Action> {
@@ -74,7 +69,7 @@ fn try_remap(
         input: direction,
     };
 
-    let Some(m) = lookup(mappings, &binding) else {
+    let Some(&output) = mappings.get(&binding) else {
         return Ok(Action::Passthrough);
     };
 
@@ -82,15 +77,18 @@ fn try_remap(
         return Ok(Action::Consumed);
     }
 
-    eprintln!("{:?} -> {:?}", m.binding, m.output);
-
-    emit(virt, m.output.to_evdev())?;
+    eprintln!("{binding:?} -> {output:?}");
+    emit(virt, output.to_evdev())?;
 
     Ok(Action::Consumed)
 }
 
 pub fn run(rule: &RuleConfig, socket_path: Option<String>) -> Result<()> {
-    let mappings = rule.mappings();
+    let mappings: Mappings = rule
+        .mappings()
+        .into_iter()
+        .map(|m| (m.binding, m.output))
+        .collect();
 
     if mappings.is_empty() {
         bail!("no valid mappings");
@@ -102,21 +100,20 @@ pub fn run(rule: &RuleConfig, socket_path: Option<String>) -> Result<()> {
         eprintln!("target: [{}]", rule.window_class.join(", "));
     }
 
-    for m in &mappings {
-        eprintln!("  {:?} -> {:?}", m.binding, m.output);
+    for (binding, output) in &mappings {
+        eprintln!("  {binding:?} -> {output:?}");
     }
 
     let mut dev = device::find_mouse(rule.device.as_deref()).context("no suitable device found")?;
-
     eprintln!("grabbing: {}", dev.name().unwrap_or("?"));
-
     dev.grab()?;
 
     let provider = focus::provider(socket_path);
     let keyboard = device::find_keyboard();
+    let extra_keys: Vec<_> = mappings.values().collect();
 
-    let mut virt = device::mirror(&dev, &mappings)?;
-    let mut window = FocusTracker::new(&rule.window_class, provider);
+    let mut virt = device::mirror(&dev, &extra_keys)?;
+    let mut window = Tracker::new(&rule.window_class, provider);
 
     loop {
         for event in dev.fetch_events()? {

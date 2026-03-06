@@ -1,7 +1,6 @@
 use evdev::{Key, RelativeAxisType};
 use serde::Deserialize;
 
-/// Keyboard modifier held during an input event.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Modifier {
@@ -12,7 +11,6 @@ pub enum Modifier {
     Shift,
 }
 
-/// A remappable event: scroll direction or mouse button.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Event {
@@ -25,21 +23,18 @@ pub enum Event {
     MouseExtra,
 }
 
-/// A modifier + event pair that triggers a remap.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Binding {
     pub modifier: Modifier,
     pub input: Event,
 }
 
-/// A binding mapped to its replacement output event.
 #[derive(Debug, Clone, Copy)]
 pub struct Mapping {
     pub binding: Binding,
     pub output: Event,
 }
 
-/// Classifies REL_WHEEL vs REL_WHEEL_HI_RES axis codes.
 pub enum ScrollAxis {
     Standard,
     HiRes,
@@ -56,7 +51,6 @@ impl ScrollAxis {
 }
 
 impl Event {
-    /// Convert to evdev key code. Only valid for button events.
     pub fn to_evdev(self) -> Key {
         match self {
             Self::MouseLeft => Key::BTN_LEFT,
@@ -78,6 +72,8 @@ mod tests {
     use super::*;
     use serde::Deserialize;
 
+    // im starting to thing toml was a mistake lol
+    // TODO: change configs to json maybe?
     #[derive(Deserialize)]
     struct W<T> {
         v: T,
