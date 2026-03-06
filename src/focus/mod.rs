@@ -2,16 +2,10 @@ pub mod hyprland;
 
 use std::time::{Duration, Instant};
 
-pub use hyprland::HyprEnv;
-
-/// Queries the compositor for the currently focused window class.
-/// Implement this for each supported compositor.
 pub trait FocusProvider {
     fn active_window_class(&mut self) -> Option<String>;
 }
 
-/// Wraps a FocusProvider with throttling and target class matching.
-/// The underlying provider is only queried at most once per 100ms.
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 
 pub struct FocusTracker {
@@ -64,12 +58,12 @@ impl FocusTracker {
     }
 }
 
-pub fn hypr_env() -> Option<HyprEnv> {
-    hyprland::resolve_env()
+pub fn resolve_socket() -> Option<String> {
+    hyprland::resolve_socket()
 }
 
-/// Auto-detect the compositor and return the appropriate FocusProvider.
-pub fn provider(hypr_env: Option<HyprEnv>) -> Box<dyn FocusProvider> {
-    // For now, only Hyprland is supported. Future: check $SWAYSOCK, $I3SOCK, etc.
-    Box::new(hyprland::HyprlandFocus::new(hypr_env))
+pub fn provider(socket_path: Option<String>) -> Box<dyn FocusProvider> {
+    Box::new(hyprland::HyprlandFocus::new(
+        socket_path.unwrap_or_default(),
+    ))
 }

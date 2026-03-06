@@ -1,6 +1,6 @@
 use crate::config::RuleConfig;
 use crate::device;
-use crate::focus::{self, FocusTracker, HyprEnv};
+use crate::focus::{self, FocusTracker};
 use crate::input::{Binding, Event, Mapping, Modifier, ScrollAxis};
 use anyhow::{Context, Result, bail};
 use evdev::{Device, EventType, InputEvent, Key};
@@ -89,7 +89,7 @@ fn try_remap(
     Ok(Action::Consumed)
 }
 
-pub fn run(rule: &RuleConfig, hypr_env: Option<HyprEnv>) -> Result<()> {
+pub fn run(rule: &RuleConfig, socket_path: Option<String>) -> Result<()> {
     let mappings = rule.mappings();
 
     if mappings.is_empty() {
@@ -112,7 +112,7 @@ pub fn run(rule: &RuleConfig, hypr_env: Option<HyprEnv>) -> Result<()> {
 
     dev.grab()?;
 
-    let provider = focus::provider(hypr_env);
+    let provider = focus::provider(socket_path);
     let keyboard = device::find_keyboard();
 
     let mut virt = device::mirror(&dev, &mappings)?;

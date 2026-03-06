@@ -1,6 +1,6 @@
 # evdev-remap
 
-Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to clicks, rebind mouse buttons — scoped to specific windows or applied globally. Built for repetitive games (Path of Exile, Diablo, Last Epoch) and RSI prevention.
+Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to clicks, rebind mouse buttons - scoped to specific windows or applied globally. Built for repetitive games (Path of Exile, Diablo, Last Epoch) and RSI prevention.
 
 Grabs a physical device via evdev, remaps matched events when a target window is focused (or always, if no window filter is set), passes everything else through untouched. No X11 dependency, works natively on Wayland.
 

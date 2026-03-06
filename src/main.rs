@@ -26,11 +26,11 @@ fn run() -> Result<()> {
         bail!("no rules defined");
     }
 
-    let hypr_env = focus::hypr_env();
+    let socket = focus::resolve_socket();
 
     if config.rule.len() == 1 {
         let rule = config.rule.into_iter().next().expect("checked non-empty");
-        return remap::run(&rule, hypr_env);
+        return remap::run(&rule, socket);
     }
 
     let handles: Vec<_> = config
@@ -38,9 +38,9 @@ fn run() -> Result<()> {
         .into_iter()
         .enumerate()
         .map(|(i, rule)| {
-            let env = hypr_env.clone();
+            let socket = socket.clone();
             thread::spawn(move || {
-                if let Err(e) = remap::run(&rule, env) {
+                if let Err(e) = remap::run(&rule, socket) {
                     eprintln!("rule {i}: {e:#}");
                 }
             })
