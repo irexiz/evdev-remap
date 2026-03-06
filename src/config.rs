@@ -10,7 +10,8 @@ pub struct Config {
 /// A single remapping rule: target window, device, and remap entries.
 #[derive(Deserialize)]
 pub struct RuleConfig {
-    pub window_class: Option<String>,
+    #[serde(default)]
+    pub window_class: Vec<String>,
     pub device: Option<String>,
     pub remap: Vec<RemapConfig>,
 }
@@ -61,7 +62,7 @@ mod tests {
 
         let config: Config = toml::from_str(toml).unwrap();
         assert_eq!(config.rule.len(), 1);
-        assert!(config.rule[0].window_class.is_none());
+        assert!(config.rule[0].window_class.is_empty());
 
         let mappings = config.rule[0].mappings();
         assert_eq!(mappings.len(), 2);

@@ -19,9 +19,14 @@ with lib; let
     output = "${entry.output}"
   '';
 
+  windowClassToToml = classes:
+    if classes == []
+    then ""
+    else ''window_class = [${concatMapStringsSep ", " (c: ''"${c}"'') classes}]'';
+
   ruleToToml = rule: ''
     [[rule]]
-    window_class = "${rule.windowClass}"
+    ${windowClassToToml rule.windowClass}
     ${optionalString (rule.device != null) ''device = "${rule.device}"''}
 
     ${concatMapStringsSep "\n" remapEntryToToml rule.remap}
@@ -52,8 +57,10 @@ with lib; let
   ruleSubmodule = types.submodule {
     options = {
       windowClass = mkOption {
-        type = types.str;
-        example = "steam_app_238960";
+        type = types.listOf types.str;
+        default = [];
+        example = ["steam_app_238960"];
+        description = "Window classes to match. Empty list means always active.";
       };
       device = mkOption {
         type = types.nullOr types.str;

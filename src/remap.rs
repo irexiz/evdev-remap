@@ -110,7 +110,7 @@ pub fn run(rule: &RuleConfig, hypr_env: Option<HyprEnv>) -> Result<()> {
     let keyboard = device::find_keyboard();
 
     let mut virt = device::mirror(&dev, &mappings)?;
-    let mut window = FocusTracker::new(rule.window_class.as_deref(), provider);
+    let mut window = FocusTracker::new(&rule.window_class, provider);
 
     loop {
         for event in dev.fetch_events()? {

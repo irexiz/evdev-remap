@@ -1,8 +1,8 @@
 # evdev-remap
 
-Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to clicks, rebind mouse buttons, all scoped to a specific window. Built for repetitive games (Path of Exile, Diablo, Last Epoch) and RSI prevention.
+Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to clicks, rebind mouse buttons — scoped to specific windows or applied globally. Built for repetitive games (Path of Exile, Diablo, Last Epoch) and RSI prevention.
 
-Grabs a physical device via evdev, remaps matched events when the target window is focused, passes everything else through untouched. No X11 dependency, works natively on Wayland.
+Grabs a physical device via evdev, remaps matched events when a target window is focused (or always, if no window filter is set), passes everything else through untouched. No X11 dependency, works natively on Wayland.
 
 Currently supports Hyprland for focus detection. The compositor backend is pluggable via a trait.
 
@@ -40,8 +40,9 @@ cargo run -- /path/to/config.toml
 ## Config
 
 ```toml
+# Per-window: only active when one of these windows is focused
 [[rule]]
-window_class = "steam_app_238960"
+window_class = ["steam_app_238960", "steam_app_2694490"]
 device = "Logitech USB Receiver"  # optional, auto-detects if omitted
 
 [[rule.remap]]
@@ -52,6 +53,13 @@ output = "mouse_left"
 modifier = "ctrl"
 input = "scroll_down"
 output = "mouse_left"
+
+# Global: always active (omit window_class)
+[[rule]]
+
+[[rule.remap]]
+input = "mouse_side"
+output = "mouse_middle"
 ```
 
 Inputs: `scroll_up`, `scroll_down`, `mouse_left`, `mouse_right`, `mouse_middle`, `mouse_side`, `mouse_extra`.
@@ -94,7 +102,7 @@ services.evdev-remap = {
   enable = true;
   rules = [
     {
-      windowClass = "steam_app_238960";
+      windowClass = [ "steam_app_238960" ];
       device = "Logitech USB Receiver";
       remap = [
         {
