@@ -41,6 +41,8 @@ impl FocusTracker {
         }
         self.last_check = Instant::now();
 
+        let prev = self.active;
+
         self.active = self
             .provider
             .active_window_class()
@@ -49,6 +51,14 @@ impl FocusTracker {
                 self.targets.iter().any(|t| c.contains(t))
             })
             .unwrap_or(false);
+
+        if self.active != prev {
+            if self.active {
+                eprintln!("focus: matched target window");
+            } else {
+                eprintln!("focus: lost target window");
+            }
+        }
 
         self.active
     }

@@ -96,6 +96,12 @@ pub fn run(rule: &RuleConfig, hypr_env: Option<HyprEnv>) -> Result<()> {
         bail!("no valid mappings");
     }
 
+    if rule.window_class.is_empty() {
+        eprintln!("target: global (all windows)");
+    } else {
+        eprintln!("target: [{}]", rule.window_class.join(", "));
+    }
+
     for m in &mappings {
         eprintln!("  {:?} -> {:?}", m.binding, m.output);
     }
