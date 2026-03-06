@@ -4,7 +4,7 @@ mod focus;
 mod input;
 mod remap;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::{env, fs, thread};
 
 fn main() {

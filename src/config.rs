@@ -10,7 +10,7 @@ pub struct Config {
 /// A single remapping rule: target window, device, and remap entries.
 #[derive(Deserialize)]
 pub struct RuleConfig {
-    pub window_class: String,
+    pub window_class: Option<String>,
     pub device: Option<String>,
     pub remap: Vec<RemapConfig>,
 }
@@ -48,7 +48,6 @@ mod tests {
     fn full_config() {
         let toml = r#"
             [[rule]]
-            window_class = "firefox"
 
             [[rule.remap]]
             modifier = "ctrl"
@@ -62,6 +61,7 @@ mod tests {
 
         let config: Config = toml::from_str(toml).unwrap();
         assert_eq!(config.rule.len(), 1);
+        assert!(config.rule[0].window_class.is_none());
 
         let mappings = config.rule[0].mappings();
         assert_eq!(mappings.len(), 2);

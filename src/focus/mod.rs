@@ -15,24 +15,27 @@ pub trait FocusProvider {
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 
 pub struct FocusTracker {
-    target_class: String,
+    target_class: Option<String>,
     active: bool,
     last_check: Instant,
     provider: Box<dyn FocusProvider>,
 }
 
 impl FocusTracker {
-    pub fn new(window_class: &str, provider: Box<dyn FocusProvider>) -> Self {
+    pub fn new(window_class: Option<&str>, provider: Box<dyn FocusProvider>) -> Self {
         Self {
-            target_class: window_class.to_lowercase(),
+            target_class: window_class.map(|s| s.to_lowercase()),
             active: false,
             last_check: Instant::now() - POLL_INTERVAL,
             provider,
         }
     }
 
-    /// Returns true if the target window class is currently focused.
     pub fn is_focused(&mut self) -> bool {
+        let Some(ref target) = self.target_class else {
+            return true;
+        };
+
         if self.last_check.elapsed() < POLL_INTERVAL {
             return self.active;
         }
@@ -41,7 +44,7 @@ impl FocusTracker {
         self.active = self
             .provider
             .active_window_class()
-            .map(|c| c.to_lowercase().contains(&self.target_class))
+            .map(|c| c.to_lowercase().contains(target))
             .unwrap_or(false);
 
         self.active

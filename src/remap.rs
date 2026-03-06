@@ -89,8 +89,6 @@ fn try_remap(
     Ok(Action::Consumed)
 }
 
-/// Grab device, create virtual mirror, enter event loop.
-/// Matched events get remapped, everything else passes through.
 pub fn run(rule: &RuleConfig, hypr_env: Option<HyprEnv>) -> Result<()> {
     let mappings = rule.mappings();
 
@@ -112,7 +110,7 @@ pub fn run(rule: &RuleConfig, hypr_env: Option<HyprEnv>) -> Result<()> {
     let keyboard = device::find_keyboard();
 
     let mut virt = device::mirror(&dev, &mappings)?;
-    let mut window = FocusTracker::new(&rule.window_class, provider);
+    let mut window = FocusTracker::new(rule.window_class.as_deref(), provider);
 
     loop {
         for event in dev.fetch_events()? {

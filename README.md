@@ -8,7 +8,7 @@ Currently supports Hyprland for focus detection. The compositor backend is plugg
 
 ## Why?
 
-There's plenty of alternatives, but I always found it annoying that I can't specify which window the biding should be active in. I want to use my scroll-wheel in game to click items, but I want the scroll-wheel in my browser on the other screen to just scroll. Also, RSI and carpal tunnel aren't fun to have.
+There's plenty of alternatives, but I always found it annoying that I can't specify which window the binding should be active in. I want to use my scroll-wheel in game to click items, but I want the scroll-wheel in my browser on the other screen to just scroll. Also, RSI and carpal tunnel aren't fun to have.
 
 ## How it works
 
