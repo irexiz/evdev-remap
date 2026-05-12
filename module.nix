@@ -2,15 +2,12 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 with lib; let
   cfg = config.services.evdev-remap;
 
-  evdev-remap = pkgs.callPackage ./default.nix {
-    hyprland = inputs.hyprland.packages.${pkgs.system}.hyprland;
-  };
+  evdev-remap = pkgs.callPackage ./default.nix {};
 
   remapEntryToToml = entry: ''
     [[rule.remap]]

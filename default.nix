@@ -1,24 +1,12 @@
-{
-  rustPlatform,
-  makeWrapper,
-  hyprland,
-  lib,
-}:
+{rustPlatform}:
 rustPlatform.buildRustPackage {
   pname = "evdev-remap";
-  version = "0.1.0";
+  version = "0.2.0";
   src = ./.;
   cargoLock.lockFile = ./Cargo.lock;
 
-  nativeBuildInputs = [makeWrapper];
-
-  postInstall = ''
-    wrapProgram $out/bin/evdev-remap \
-      --prefix PATH : ${lib.makeBinPath [hyprland]}
-  '';
-
   meta = {
-    description = "Per-window evdev input remapper for Wayland (Hyprland)";
+    description = "Per-window evdev input remapper for Wayland (Hyprland, i3, sway)";
     mainProgram = "evdev-remap";
   };
 }
