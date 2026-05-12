@@ -1,4 +1,5 @@
 pub mod hyprland;
+pub mod i3;
 
 use std::time::{Duration, Instant};
 
@@ -63,13 +64,22 @@ impl Tracker {
     }
 }
 
-pub fn socket() -> Option<String> {
-    hyprland::socket()
+#[derive(Clone)]
+pub enum Socket {
+    Hyprland(String),
+    I3(String),
 }
 
-pub fn provider(socket_path: Option<String>) -> Box<dyn FocusProvider> {
-    match socket_path {
-        Some(p) => Box::new(hyprland::Hyprland::new(p)),
+pub fn socket() -> Option<Socket> {
+    hyprland::socket()
+        .map(Socket::Hyprland)
+        .or_else(|| i3::socket().map(Socket::I3))
+}
+
+pub fn provider(socket: Option<Socket>) -> Box<dyn FocusProvider> {
+    match socket {
+        Some(Socket::Hyprland(p)) => Box::new(hyprland::Hyprland::new(p)),
+        Some(Socket::I3(p)) => Box::new(i3::I3::new(p)),
         None => Box::new(NoopProvider),
     }
 }

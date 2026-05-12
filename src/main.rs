@@ -26,7 +26,7 @@ fn run() -> Result<()> {
         bail!("no rules defined");
     }
 
-    let socket = focus::socket();
+    let socket: Option<focus::Socket> = focus::socket();
 
     let handles: Vec<_> = config
         .rule
