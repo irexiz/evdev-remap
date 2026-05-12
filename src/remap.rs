@@ -83,7 +83,7 @@ fn try_remap(
     Ok(Action::Consumed)
 }
 
-pub fn run(rule: &RuleConfig, socket_path: Option<String>) -> Result<()> {
+pub fn run(rule: &RuleConfig, socket: Option<focus::Socket>) -> Result<()> {
     let mappings: Mappings = rule
         .mappings()
         .into_iter()
@@ -108,7 +108,7 @@ pub fn run(rule: &RuleConfig, socket_path: Option<String>) -> Result<()> {
     eprintln!("grabbing: {}", dev.name().unwrap_or("?"));
     dev.grab()?;
 
-    let provider = focus::provider(socket_path);
+    let provider = focus::provider(socket);
     let keyboard = device::find_keyboard();
     let extra_keys: Vec<_> = mappings.values().collect();
 
