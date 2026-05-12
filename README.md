@@ -4,7 +4,7 @@ Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to c
 
 Grabs a physical device via evdev, remaps matched events when a target window is focused (or always, if no window filter is set), passes everything else through untouched. No X11 dependency, works natively on Wayland.
 
-Currently supports Hyprland for focus detection. The compositor backend is pluggable via a trait.
+Currently supports Hyprland, i3 and Sway for focus detection. The compositor backend is pluggable via a trait.
 
 ## Why?
 
@@ -73,6 +73,11 @@ Device accepts a name, a substring, a `/dev/input/eventN` path, or omit to auto-
 To find your window class (Hyprland):
 ```
 hyprctl activewindow -j | jq .class
+```
+
+To find your window class (i3/Sway):
+```
+i3-msg -t get_tree | jq '.. | select(.focused? == true) | .window_properties.class'
 ```
 
 To find your device name:
