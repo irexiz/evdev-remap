@@ -1,6 +1,6 @@
 # evdev-remap
 
-Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to clicks, rebind mouse buttons - scoped to specific windows or applied globally. Built for repetitive games (Path of Exile, Diablo, Last Epoch) and RSI prevention.
+Per-window mouse and scroll remapping for Linux/Wayland. Remap scroll wheel to clicks, keyboard events, rebind mouse buttons - scoped to specific windows or applied globally. Built for repetitive games (Path of Exile, Diablo, Last Epoch) and RSI prevention.
 
 Grabs a physical device via evdev, remaps matched events when a target window is focused (or always, if no window filter is set), passes everything else through untouched. No X11 dependency, works natively on Wayland.
 
@@ -18,7 +18,7 @@ There's plenty of alternatives, but I always found it annoying that I can't spec
 4. When the target window is focused, matched inputs are remapped and emitted on the virtual device
 5. Unmatched events pass through as-is
 
-No daemon, no root (just `input` group), no latency. One binary, one config file. Strict 1:1 input remapping - one action in, one action out.
+Strict 1:1 input remapping - one action in, one action out.
 
 ## Install
 
@@ -59,12 +59,12 @@ output = "mouse_left"
 
 [[rule.remap]]
 input = "mouse_side"
-output = "mouse_middle"
+output = "f"
 ```
 
 Inputs: `scroll_up`, `scroll_down`, `mouse_left`, `mouse_right`, `mouse_middle`, `mouse_side`, `mouse_extra`.
 
-Outputs: `mouse_left`, `mouse_right`, `mouse_middle`, `mouse_side`, `mouse_extra`.
+Outputs: `mouse_left`, `mouse_right`, `mouse_middle`, `mouse_side`, `mouse_extra`. `a` through `z` keys
 
 Modifiers: `ctrl`, `alt`, `shift` (optional field, omit for no modifier).
 
