@@ -1,4 +1,4 @@
-use crate::input::Event;
+use crate::input::{Event, ToEvdev as _};
 use anyhow::{Context, Result};
 use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
 use evdev::{AttributeSet, Device, Key, RelativeAxisType};

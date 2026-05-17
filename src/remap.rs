@@ -1,7 +1,7 @@
 use crate::config::RuleConfig;
 use crate::device;
 use crate::focus::{self, Tracker};
-use crate::input::{Binding, Event, Modifier, ScrollAxis};
+use crate::input::{Binding, Event, Modifier, MouseEvent, ScrollAxis, ToEvdev as _};
 use anyhow::{Context, Result, bail};
 use evdev::{Device, EventType, InputEvent, Key};
 use std::collections::HashMap;
@@ -59,9 +59,9 @@ fn try_remap(
     };
 
     let direction = if ev.value().is_positive() {
-        Event::ScrollUp
+        Event::Mouse(MouseEvent::ScrollUp)
     } else {
-        Event::ScrollDown
+        Event::Mouse(MouseEvent::ScrollDown)
     };
 
     let binding = Binding {
